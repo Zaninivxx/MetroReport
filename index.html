@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MetroReport — Status em tempo real</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E1116">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MetroReport">
+</head>
+<body>
+
+<!-- ============ TELA DE LOGIN / CADASTRO ============ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="dot"></div><span>MetroReport</span></div>
+    <div class="auth-sub" id="auth-subtitle">Entre para ver o status das linhas em tempo real.</div>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <form id="login-form">
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="login-email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="login-password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary">Entrar</button>
+      <button type="button" id="forgot-link" class="link-btn">Esqueci minha senha</button>
+    </form>
+
+    <form id="register-form" class="hidden">
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="register-name" required>
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="register-email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="register-password" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn btn-primary">Criar conta</button>
+    </form>
+
+    <form id="forgot-form" class="hidden">
+      <div class="field">
+        <label>E-mail cadastrado</label>
+        <input type="email" id="forgot-email" required autocomplete="username">
+      </div>
+      <button type="submit" class="btn btn-primary">Enviar link de redefinição</button>
+      <button type="button" id="back-to-login-link" class="link-btn">Voltar pro login</button>
+    </form>
+
+    <form id="reset-form" class="hidden">
+      <div class="field">
+        <label>Nova senha</label>
+        <input type="password" id="reset-password" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn btn-primary">Redefinir senha</button>
+    </form>
+
+    <div class="auth-switch">
+      <span id="switch-text">Ainda não tem conta?</span>
+      <button type="button" id="switch-btn">Cadastre-se</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app-shell" class="hidden">
+  <div class="overlay-scrim" id="overlay-scrim"></div>
+
+  <aside id="sidebar">
+    <div class="sidebar-top">
+      <div class="brand"><div class="dot"></div><span>MetroReport</span></div>
+      <button id="toggle-sidebar" title="Recolher menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="nav-group">
+      <div class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span>Notificações</span>
+      </div>
+      <div class="nav-item" data-page="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        <span>Perfil</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+
+    <div id="sidebar-user">
+      <div class="avatar" id="sidebar-avatar">--</div>
+      <span id="sidebar-username">Carregando…</span>
+    </div>
+    <div class="nav-item" id="logout-btn" style="margin-top:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      <span>Sair</span>
+    </div>
+  </aside>
+
+  <main id="main">
+    <button id="mobile-menu-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <!-- ---------- DASHBOARD ---------- -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Status das linhas</div>
+          <div class="page-sub">Metrô e CPTM — São Paulo</div>
+        </div>
+        <div class="chip-clock" id="clock">--:--:--</div>
+      </div>
+
+      <div class="push-banner" id="push-banner">
+        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="push-banner-text">
+          <strong>Ative as notificações</strong>
+          <p>Instale o atalho e receba um aviso automático quando sua linha mudar — sem precisar abrir o app.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="push-enable-btn" style="width:auto; white-space:nowrap;">Ativar</button>
+      </div>
+
+      <div class="section-label">Linhas de Metrô</div>
+      <div class="lines-grid" id="grid-metro"></div>
+
+      <div class="section-label">Linhas CPTM</div>
+      <div class="lines-grid" id="grid-cptm"></div>
+    </section>
+
+    <!-- ---------- NOTIFICAÇÕES ---------- -->
+    <section class="page" id="page-notifications">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Notificações</div>
+          <div class="page-sub">Escolha de quais linhas você quer receber alertas</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Linhas monitoradas</div>
+        <div class="card-sub">Desative as linhas que não te interessam</div>
+        <div id="notif-list"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PERFIL ---------- -->
+    <section class="page" id="page-profile">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Perfil</div>
+          <div class="page-sub">Suas informações de conta</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="profile-head">
+          <div class="avatar-edit" id="avatar-edit">
+            <div class="avatar" id="profile-avatar">--</div>
+            <div class="avatar-edit-overlay">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+          </div>
+          <div>
+            <div class="profile-name" id="profile-name">—</div>
+            <div class="profile-email" id="profile-email">—</div>
+          </div>
+        </div>
+        <input type="file" id="avatar-input" accept="image/*" class="hidden">
+      </div>
+
+      <div class="card">
+        <div class="card-title">Editar nome</div>
+        <form id="profile-form">
+          <div class="field">
+            <label>Nome completo</label>
+            <input type="text" id="profile-name-input">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:auto;">Salvar alterações</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Notificações</div>
+        <div class="card-sub">Pra onde a gente te avisa quando uma linha mudar de status</div>
+        <form id="notify-channel-form">
+          <div class="field">
+            <label>Celular (com DDD, ex: 11987654321)</label>
+            <input type="tel" id="profile-phone-input" placeholder="11987654321">
+          </div>
+          <div class="field">
+            <label>Receber avisos por</label>
+            <select class="field-select" id="profile-notify-channel">
+              <option value="email">Só e-mail</option>
+              <option value="whatsapp">Só WhatsApp</option>
+              <option value="both">E-mail e WhatsApp</option>
+              <option value="none">Não quero avisos</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:auto;">Salvar preferências</button>
+        </form>
+      </div>
+
+      <div class="card hidden" id="dev-tools-card">
+        <div class="card-title">Ferramentas de desenvolvedor</div>
+        <div class="card-sub">Manda um push de teste só pra este navegador, resumindo o status atual de todas as linhas — não afeta outros usuários</div>
+        <button type="button" class="btn btn-primary" id="dev-test-btn" style="width:auto;">TESTE</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"><div class="dot"></div><span id="toast-text"></span></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
